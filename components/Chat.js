@@ -9,16 +9,19 @@ export default class Chat extends React.Component {
         /* sets the title of Chat to the name input from Start */
         this.props.navigation.setOptions({ title: name });
         /* passes the color defined on Start menu */
-        let bgColor = this.props.route.params;
+        let { bgColor } = this.props.route.params;
 
         return (
-            <View style={{ 
-                flex:1, 
-                justifyContent:'center', 
-                alignItems:'center',
-                backgroundColor: bgColor, }}>
-                <Text>Hello Screen2!</Text>
-                {/* This screen doesn't necessarily need a Button for Screen1 since the user could use their back arrow */}
+            <View 
+                style={{ 
+                    flex:1, 
+                    justifyContent:'center', 
+                    alignItems:'center',
+                    backgroundColor: bgColor, 
+                }}
+            >
+                <Text>Hello ChatS!</Text>
+                    {/* This screen doesn't necessarily need a Button for Screen1 since the user could use their back arrow */}
                 <Button
                     title='Back to Start'
                     onPress={() => this.props.navigation.navigate('Start')}
