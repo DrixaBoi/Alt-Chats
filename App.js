@@ -35,7 +35,7 @@ export default class App extends React.Component {
           initialRouteName='Start'
         >
 {/* below defines each navigation screens name and component, to be used for other
-methods, such as a onPress Button for Screen1 to Screen2*/}          
+methods, such as a onPress Button for Start to Chat */}          
           <Stack.Screen
             name='Start'
             component={Start}
