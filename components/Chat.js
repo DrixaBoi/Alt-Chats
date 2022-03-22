@@ -20,7 +20,7 @@ export default class Chat extends React.Component {
                     backgroundColor: bgColor, 
                 }}
             >
-                <Text>Hello ChatS!</Text>
+                <Text>Hello Chat!</Text>
                     {/* This screen doesn't necessarily need a Button for Screen1 since the user could use their back arrow */}
                 <Button
                     title='Back to Start'
