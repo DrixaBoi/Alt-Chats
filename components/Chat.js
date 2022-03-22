@@ -3,11 +3,14 @@ import { View, Text, Button, TextInput, StyleSheet } from 'react-native';
 
 export default class Chat extends React.Component {
 
-    render() {
+    componentDidMount() {
         /* passes the name defined on Start to Chat */
         let name = this.props.route.params.name;
         /* sets the title of Chat to the name input from Start */
         this.props.navigation.setOptions({ title: name });
+    }
+    
+    render() {
         /* passes the color defined on Start menu */
         let { bgColor } = this.props.route.params;
 
