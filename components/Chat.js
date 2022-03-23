@@ -8,7 +8,7 @@ export default class Chat extends React.Component {
         super();
         this.state = {
 // the message: [], state below is the start of the process of being able to send, receive, and display messages
-            message: [],
+            messages: [],
         }
     };
 
