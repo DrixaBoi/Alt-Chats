@@ -99,8 +99,8 @@ export default class Start extends React.Component {
                             style={styles.chatButton}
                             accessible={true}
                             accessibilityLabel="Enter Chat"
-                            accessibilityHint=" Continue to chat"
-                            accessibilityRole="button"
+                            accessibilityHint=" Continue to Chat"
+                            accessibilityRole="Button"
                         // the onPress method needs to match the name prop defined in App.js  
                             onPress={() => this.props.navigation.navigate('Chat', {
                                 name: this.state.name,
