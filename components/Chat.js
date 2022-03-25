@@ -1,10 +1,24 @@
 import React from 'react';
 import { View, Text, Button, TextInput, StyleSheet, Platform, KeyboardAvoidingView } from 'react-native';
 import { Bubble, GiftedChat } from 'react-native-gifted-chat';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
+
+const firebaseConfig = {
+        apiKey: "AIzaSyChLRAbXvQENdL4AajHFHfy5TamYXXNMWk",
+        authDomain: "alt-chat-6c58a.firebaseapp.com",
+        projectId: "alt-chat-6c58a",
+        storageBucket: "alt-chat-6c58a.appspot.com",
+        messagingSenderId: "970155524335",
+        appId: "1:970155524335:web:f20a7b13bbaa493012db1a",
+        measurementId: "G-GPDV2NX5NX"
+        };
+
 
 //import firebase and firestore
-const firebase = require('firebase');
-require('firebase/firestore');
+// const firebase = require('firebase');
+// require('firebase/firestore');
 
 export default class Chat extends React.Component {
     
@@ -13,7 +27,7 @@ export default class Chat extends React.Component {
         this.state = {
 // the message: [], state below is the start of the process of being able to send, receive, and display messages
             messages: [],
-            _id: 0,
+            uid: 0,
             user: {
                 _id: "",
                 name: "",
@@ -22,15 +36,7 @@ export default class Chat extends React.Component {
         };
 
         if (!firebase.apps.length) {
-            firebase.initializeApp({
-            apiKey: "AIzaSyChLRAbXvQENdL4AajHFHfy5TamYXXNMWk",
-            authDomain: "alt-chat-6c58a.firebaseapp.com",
-            projectId: "alt-chat-6c58a",
-            storageBucket: "alt-chat-6c58a.appspot.com",
-            messagingSenderId: "970155524335",
-            appId: "1:970155524335:web:f20a7b13bbaa493012db1a",
-            measurementId: "G-GPDV2NX5NX"
-            });
+            firebase.initializeApp(firebaseConfig);
         }
 
         this.referenceChatMessages = firebase.firestore().collection('messages');
@@ -72,13 +78,25 @@ export default class Chat extends React.Component {
             if (!user) {
                 firebase.auth().signInAnonymously();
             }
-            this.setState({
-                _id: user._id,
-                messages: [],
-            });
             this.unsubscribe = this.referenceChatMessages
                 .orderBy('createdAt', 'desc')
                 .onSnapshot(this.onCollectionUpdate);
+                
+            this.setState({
+                uid: user.uid,
+                messages: [],
+                user: {
+                    _id: user.uid,
+                    name: name,
+                    avatar: "https://placeimg.com/140/140/any",
+                    image: null,
+                },
+            });
+            
+            this.refMsgsUser = firebase
+                .firestore()
+                .collection('messages')
+                .where('uid', '==', this.state.uid);
         });
     }
 
@@ -97,7 +115,6 @@ export default class Chat extends React.Component {
             text: message.text || "",
             createdAt: message.createdAt,
             user: this.state.user,
-            image: message.image || "",
         });
     }
 
@@ -107,9 +124,8 @@ export default class Chat extends React.Component {
             messages: GiftedChat.append(previousState.messages, messages),
         }),
         () => {
-            //saves messages sent to the chat
+            // messages sent to the chat
             this.addMessages();
-            this.saveMessages();
         }
     );
 }
