@@ -74,9 +74,9 @@ export default class Chat extends React.Component {
         this.props.navigation.setOptions({ title: name });
 
         // authenticating the use of users being able to sign in anonymously
-        this.authUnsubscribe = firebase.auth().onAuthStateChanged((user) => {
+        this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
             if (!user) {
-                firebase.auth().signInAnonymously();
+                return await firebase.auth().signInAnonymously();
             }
             this.unsubscribe = this.referenceChatMessages
                 .orderBy('createdAt', 'desc')
@@ -163,9 +163,7 @@ export default class Chat extends React.Component {
                     renderBubble={this.renderBubble.bind(this)}
                     messages={this.state.messages}
                     onSend={messages => this.onSend(messages)}
-                    user={{
-                        _id: 1,
-                    }}
+                    user={this.state.user}
                 />
 
 {/* This screen doesn't necessarily need a Button for Start since the user could use their back arrow */}
