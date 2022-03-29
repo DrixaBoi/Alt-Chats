@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, Button, TextInput, StyleSheet, Platform, KeyboardAvoidingView } from 'react-native';
-import { Bubble, GiftedChat } from 'react-native-gifted-chat';
+import { Bubble, GiftedChat, InputToolbar } from 'react-native-gifted-chat';
 import firebase from 'firebase/compat/app';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
 
@@ -65,7 +67,39 @@ export default class Chat extends React.Component {
         this.setState({
             messages: messages,
         });
+        this.saveMessages();
     };
+
+    async getMessages() {
+        let messages = '';
+        try {
+            messages = await AsyncStorage.getItem('messages') || [];
+            this.setState({
+                messagges: JSON.parse(messages)
+            });
+        } catch (error) {
+            console.log(error.message);
+        }
+    };
+
+    async saveMessages() {
+        try {
+            await AsyncStorage.setItem('messages', JSON.stringify(this.state.messages));
+        } catch (error) {
+            console.log(error.message);
+        }
+    }
+
+    async deleteMessages() {
+        try {
+            await AsyncStorage.removeItem('messages');
+            this.setState({
+                messages: []
+            })
+        } catch (error) {
+            console.log(error.message);
+        }
+    }
 
     componentDidMount() {
         /* passes the name defined on Start to Chat */
@@ -73,30 +107,53 @@ export default class Chat extends React.Component {
         /* sets the title of Chat to the name input from Start */
         this.props.navigation.setOptions({ title: name });
 
-        // authenticating the use of users being able to sign in anonymously
-        this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
-            if (!user) {
-                return await firebase.auth().signInAnonymously();
-            }
-            this.unsubscribe = this.referenceChatMessages
-                .orderBy('createdAt', 'desc')
-                .onSnapshot(this.onCollectionUpdate);
-                
-            this.setState({
-                uid: user.uid,
-                messages: [],
-                user: {
-                    _id: user.uid,
-                    name: name,
-                    avatar: "https://placeimg.com/140/140/any",
-                    image: null,
-                },
-            });
+        //find out the users connection status using the fetch() method
+        NetInfo.fetch().then(connection => {
+            //which will return a promise such as online or offline
+            if (connection.isConnected) {
+                //user is online
+                this.setState({ isConnected: true });
+                console.log('online');
             
-            this.refMsgsUser = firebase
-                .firestore()
-                .collection('messages')
-                .where('uid', '==', this.state.uid);
+
+                // authenticating the use of users being able to sign in anonymously
+                this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+                    if (!user) {
+                        return await firebase.auth().signInAnonymously();
+                    }
+                    this.unsubscribe = this.referenceChatMessages
+                        .orderBy('createdAt', 'desc')
+                        .onSnapshot(this.onCollectionUpdate);
+                    
+                        // user needs an _id and name
+                    this.setState({
+                        uid: user.uid,
+                        messages: [],
+                        user: {
+                            _id: user.uid,
+                            name: name,
+                            avatar: "https://placeimg.com/140/140/any",
+                            image: null,
+                        },
+                    });
+                    
+                    this.refMsgsUser = firebase
+                        .firestore()
+                        .collection('messages')
+                        .where('uid', '==', this.state.uid);
+
+                });
+
+            //so users can save messages to AsyncStorage
+            this.saveMessages();
+
+            } else {
+                //user is offline
+                this.setState({ isConnected: false });
+                console.log('offline');
+                //so users only get messages from AsyncStorage
+                this.getMessages();
+            }
         });
     }
 
@@ -126,9 +183,10 @@ export default class Chat extends React.Component {
         () => {
             // messages sent to the chat
             this.addMessages();
-        }
-    );
-}
+            //messages stored when added to the state object messages
+            this.saveMessages();
+        });
+    }
 
 
 // The altered Bubble component is returned from GiftedChat    
@@ -150,6 +208,19 @@ export default class Chat extends React.Component {
                 }}
             />    
         )
+    }
+
+    //this will remove the text input bar if the user is offline
+    renderInputToolbar(props) {
+        if (this.state.isConnected == false) {
+         //otherwise if they are online it will keep it visible   
+         } else {
+            return (
+                <InputToolbar
+                    {...props}
+                />
+            );
+        }    
     }
 
     render() {
