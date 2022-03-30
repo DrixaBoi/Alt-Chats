@@ -29,6 +29,7 @@ export default class Chat extends React.Component {
         this.state = {
 // the message: [], state below is the start of the process of being able to send, receive, and display messages
             messages: [],
+            isConnected: false,
             uid: 0,
             user: {
                 _id: "",
@@ -75,7 +76,7 @@ export default class Chat extends React.Component {
         try {
             messages = await AsyncStorage.getItem('messages') || [];
             this.setState({
-                messagges: JSON.parse(messages)
+                messages: JSON.parse(messages)
             });
         } catch (error) {
             console.log(error.message);
@@ -160,8 +161,10 @@ export default class Chat extends React.Component {
 
     // stop listening to authenticate and collection changes 
     componentWillUnmount() {
-        this.authUnsubscribe();
-        this.unsubscribe();
+        if (this.state.isConnected) {
+            this.authUnsubscribe();
+            this.unsubscribe();
+        }    
     }
 
     // added addMessages function to use the Firestore add() method to save message object to firestore
@@ -233,6 +236,8 @@ export default class Chat extends React.Component {
                 <GiftedChat
                     renderBubble={this.renderBubble.bind(this)}
                     messages={this.state.messages}
+                    isConnected={this.state.isConnected}
+                    renderInputToolbar={this.renderInputToolbar.bind(this)}
                     onSend={messages => this.onSend(messages)}
                     user={this.state.user}
                 />
