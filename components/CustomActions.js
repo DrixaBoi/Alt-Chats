@@ -60,7 +60,7 @@ export default class CustomActions extends React.Component {
   // allows user to send their current location through their device
   getLocation = async () => {
     // asks user permission
-    const { status } = await Permissions.askAsync(Permissions.LOCATION_FOREGROUND);
+    const { status } = await Permissions.askAsync(Permissions.LOCATION);
     try {
       if (status === 'granted') {
           // calls getCurrentPositionAsync to read users current location

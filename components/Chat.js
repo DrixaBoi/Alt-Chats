@@ -50,6 +50,7 @@ export default class Chat extends React.Component {
         // removes warnings from the console
         LogBox.ignoreLogs([
             'Setting a timer',
+            'Warning: ...',
         ]);
     }
 // the onCollectionsUpdate function takes the object querySnapshot as its argument
