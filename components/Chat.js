@@ -1,13 +1,18 @@
 import React from 'react';
-import { View, Text, Button, TextInput, StyleSheet, Platform, KeyboardAvoidingView } from 'react-native';
+import { View, Text, Button, TextInput, StyleSheet, Platform, KeyboardAvoidingView, LogBox } from 'react-native';
 import { Bubble, GiftedChat, InputToolbar } from 'react-native-gifted-chat';
 import firebase from 'firebase/compat/app';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
+import MapView from 'react-native-maps';
+import CustomActions from './CustomActions';
+
+
 
 const firebaseConfig = {
+    // firebase configuration
         apiKey: "AIzaSyChLRAbXvQENdL4AajHFHfy5TamYXXNMWk",
         authDomain: "alt-chat-6c58a.firebaseapp.com",
         projectId: "alt-chat-6c58a",
@@ -16,11 +21,6 @@ const firebaseConfig = {
         appId: "1:970155524335:web:f20a7b13bbaa493012db1a",
         measurementId: "G-GPDV2NX5NX"
         };
-
-
-//import firebase and firestore
-// const firebase = require('firebase');
-// require('firebase/firestore');
 
 export default class Chat extends React.Component {
     
@@ -36,6 +36,8 @@ export default class Chat extends React.Component {
                 name: "",
                 avatar: "",
             },
+            image: null,
+            location: null,
         };
 
         if (!firebase.apps.length) {
@@ -43,6 +45,12 @@ export default class Chat extends React.Component {
         }
 
         this.referenceChatMessages = firebase.firestore().collection('messages');
+        this.refMsgsUser = null;
+
+        // removes warnings from the console
+        LogBox.ignoreLogs([
+            'Setting a timer',
+        ]);
     }
 // the onCollectionsUpdate function takes the object querySnapshot as its argument
 // then loops over all the documents inside of querySnapshot
@@ -62,6 +70,8 @@ export default class Chat extends React.Component {
                     name: data.user.name,
                     avatar: data.user.avatar,
                 },
+                image: data.image || null,
+                locations: data.location || null,
             });
         });
         //which is then rendered in the app by the setState() funtion
@@ -69,13 +79,16 @@ export default class Chat extends React.Component {
             messages: messages,
         });
         this.saveMessages();
-    };
+    }
 
+    // gets messages from asyncStorage when offline
     async getMessages() {
         let messages = '';
         try {
+            // use getItem to read messages in storage
             messages = await AsyncStorage.getItem('messages') || [];
             this.setState({
+                //converting string back into an object
                 messages: JSON.parse(messages)
             });
         } catch (error) {
@@ -120,11 +133,8 @@ export default class Chat extends React.Component {
                 // authenticating the use of users being able to sign in anonymously
                 this.authUnsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
                     if (!user) {
-                        return await firebase.auth().signInAnonymously();
+                        await firebase.auth().signInAnonymously();
                     }
-                    this.unsubscribe = this.referenceChatMessages
-                        .orderBy('createdAt', 'desc')
-                        .onSnapshot(this.onCollectionUpdate);
                     
                         // user needs an _id and name
                     this.setState({
@@ -133,16 +143,18 @@ export default class Chat extends React.Component {
                         user: {
                             _id: user.uid,
                             name: name,
-                            avatar: "https://placeimg.com/140/140/any",
-                            image: null,
-                        },
+                            avatar: "https://placeimg.com/140/140/any"
+                        }
                     });
                     
                     this.refMsgsUser = firebase
                         .firestore()
                         .collection('messages')
                         .where('uid', '==', this.state.uid);
-
+                    
+                    this.unsubscribe = this.referenceChatMessages
+                        .orderBy('createdAt', 'desc')
+                        .onSnapshot(this.onCollectionUpdate);    
                 });
 
             //so users can save messages to AsyncStorage
@@ -175,6 +187,8 @@ export default class Chat extends React.Component {
             text: message.text || "",
             createdAt: message.createdAt,
             user: this.state.user,
+            image: message.image || null,
+            location: message.location || null,
         });
     }
 
@@ -210,7 +224,7 @@ export default class Chat extends React.Component {
                     }
                 }}
             />    
-        )
+        );
     }
 
     //this will remove the text input bar if the user is offline
@@ -226,9 +240,39 @@ export default class Chat extends React.Component {
         }    
     }
 
+    // This will return a mapview when a location is added to a message
+    renderCustomView(props) {
+        const { currentMessage } = props;
+        if (currentMessage.location) {
+            return (
+                <MapView
+                    style={{ 
+                        width: 150, 
+                        height: 100, 
+                        borderRadius: 13, 
+                        margin: 3 
+                    }}
+                    region={{
+                        latitude: currentMessage.location.latitude,
+                        longitude: currentMessage.location.longitude,
+                        latitudeDelta: 0.0922,
+                        longitudeDelta: 0.0421,
+                    }}
+                />
+            );
+        }
+        return null;
+    }
+
+    // this adds an action button to communication features with an action sheet
+    renderCustomActions(props) {
+        return <CustomActions {...props} />;
+    }
+
     render() {
         /* passes the color defined on Start menu */
-        let { bgColor } = this.props.route.params;
+        const { bgColor } = this.props.route.params;
+        const { user } = this.state;
 
         return (
             <View style={{flex: 1, backgroundColor: bgColor}}>
@@ -239,7 +283,13 @@ export default class Chat extends React.Component {
                     isConnected={this.state.isConnected}
                     renderInputToolbar={this.renderInputToolbar.bind(this)}
                     onSend={messages => this.onSend(messages)}
-                    user={this.state.user}
+                    renderActions={this.renderCustomActions}
+                    renderCustomView={this.renderCustomView}
+                    user={{
+                        _id: user._id,
+                        name: user.name,
+                        avatar: user.avatar
+                    }}
                 />
 
 {/* This screen doesn't necessarily need a Button for Start since the user could use their back arrow */}

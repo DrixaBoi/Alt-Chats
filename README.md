@@ -35,3 +35,39 @@ and location data.
 
 ● Data gets stored online and offline.
 
+------------------------------------------------------------------------------
+
+Built Using:
+
+-React Native
+-Expo
+-Google Firebase
+-Gifted Chat
+
+
+How to / Using this App:
+
+Necessary:
+-Node.js & npm
+-React Native
+-Expo / Expo Go
+-Firebase
+
+
+Optional:
+-Android Studio (Android only)
+-Xcode (IOS only)
+
+
+Install Dependencies:
+-Download this repo.
+-In your CLI, navigate to the root directory of the project.
+-Run npm install to install all the dependencies.
+
+Firebase Setup
+-Please refer to the Firebase Docs.
+
+Run the App:
+-To launch the local server, run expo start or npm start in your terminal.
+
+-Expo will start the app and development tools will be available in a browser window. Scan the QR code provided in the terminal with the Expo Go app to launch the project on your physical device. Alternatively, you can open the project on an emulator/simulator (with Android Studio / Xcode) using the development tools in the browser.
